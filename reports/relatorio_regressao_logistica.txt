@@ -1,0 +1,30 @@
+                        precision    recall  f1-score   support
+
+            ACCOUNTANT       0.62      0.83      0.71        24
+              ADVOCATE       0.48      0.62      0.55        24
+           AGRICULTURE       0.86      0.46      0.60        13
+               APPAREL       0.50      0.21      0.30        19
+                  ARTS       0.53      0.48      0.50        21
+            AUTOMOBILE       1.00      0.29      0.44         7
+              AVIATION       0.90      0.78      0.84        23
+               BANKING       0.76      0.70      0.73        23
+                   BPO       0.00      0.00      0.00         4
+  BUSINESS-DEVELOPMENT       0.67      0.83      0.74        24
+                  CHEF       0.84      0.67      0.74        24
+          CONSTRUCTION       0.74      0.77      0.76        22
+            CONSULTANT       0.73      0.35      0.47        23
+              DESIGNER       0.86      0.90      0.88        21
+         DIGITAL-MEDIA       0.71      0.53      0.61        19
+           ENGINEERING       0.74      0.71      0.72        24
+               FINANCE       0.81      0.71      0.76        24
+               FITNESS       0.81      0.71      0.76        24
+            HEALTHCARE       0.64      0.70      0.67        23
+                    HR       0.84      0.95      0.89        22
+INFORMATION-TECHNOLOGY       0.71      1.00      0.83        24
+      PUBLIC-RELATIONS       0.55      0.77      0.64        22
+                 SALES       0.52      0.70      0.59        23
+               TEACHER       0.63      0.85      0.72        20
+
+              accuracy                           0.69       497
+             macro avg       0.69      0.65      0.64       497
+          weighted avg       0.70      0.69      0.68       497

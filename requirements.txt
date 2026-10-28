@@ -1,0 +1,12 @@
+streamlit>=1.40
+scikit-learn>=1.5
+pandas>=2.0
+numpy>=1.26
+joblib>=1.3
+matplotlib>=3.8
+python-dotenv>=1.0
+kagglehub>=0.3
+google-genai>=1.0
+# Opcionais, só se for usar outro provedor de LLM:
+# openai>=1.40
+# anthropic>=0.40

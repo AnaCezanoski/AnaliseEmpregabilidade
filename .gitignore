@@ -1,0 +1,6 @@
+.env
+__pycache__/
+data/*.csv
+data/*/
+models/*.joblib
+.streamlit/secrets.toml

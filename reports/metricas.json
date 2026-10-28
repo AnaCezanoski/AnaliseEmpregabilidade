@@ -1,0 +1,51 @@
+{
+  "melhor_modelo": "random_forest",
+  "criterio": "f1_macro",
+  "n_curriculos": 2482,
+  "n_areas": 24,
+  "n_teste": 497,
+  "distribuicao_areas": {
+    "INFORMATION-TECHNOLOGY": 120,
+    "BUSINESS-DEVELOPMENT": 120,
+    "ADVOCATE": 118,
+    "CHEF": 118,
+    "ENGINEERING": 118,
+    "ACCOUNTANT": 118,
+    "FINANCE": 117,
+    "FITNESS": 117,
+    "SALES": 116,
+    "AVIATION": 116,
+    "BANKING": 115,
+    "HEALTHCARE": 115,
+    "CONSULTANT": 115,
+    "CONSTRUCTION": 112,
+    "PUBLIC-RELATIONS": 111,
+    "HR": 110,
+    "DESIGNER": 107,
+    "ARTS": 103,
+    "TEACHER": 102,
+    "APPAREL": 97,
+    "DIGITAL-MEDIA": 96,
+    "AGRICULTURE": 63,
+    "AUTOMOBILE": 36,
+    "BPO": 22
+  },
+  "modelos": {
+    "regressao_logistica": {
+      "acuracia": 0.6901,
+      "precisao_macro": 0.6852,
+      "recall_macro": 0.6465,
+      "f1_macro": 0.6436,
+      "f1_ponderado": 0.6783,
+      "tempo_treino_s": 7.3
+    },
+    "random_forest": {
+      "acuracia": 0.7445,
+      "precisao_macro": 0.7321,
+      "recall_macro": 0.6971,
+      "f1_macro": 0.6852,
+      "f1_ponderado": 0.7227,
+      "tempo_treino_s": 6.7
+    }
+  }
+}
