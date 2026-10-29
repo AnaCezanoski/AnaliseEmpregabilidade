@@ -174,6 +174,7 @@ def main():
             "metricas": metricas[melhor],
         },
         RAIZ / "models" / "modelo.joblib",
+        compress=3,  # sem compressão o Random Forest passa de 100 MB (limite do GitHub)
     )
     resumo = {
         "melhor_modelo": melhor,
