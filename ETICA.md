@@ -43,7 +43,7 @@ identificável simplesmente não sai do app.
   `.gitignore`. O repositório guarda só o modelo treinado.
 - **Falha segura:** se a IA não responder (sem internet, cota esgotada, erro), o app usa
   o **modo offline**, com feedback gerado por regras. Assim ele nunca fica sem resposta.
-  As chamadas à IA têm tempo limite de 60 s.
+  As chamadas à IA têm tempo limite de 30 s.
 - **Saída da IA tratada como dado não confiável:** o texto gerado pela IA é exibido como
   texto, não como HTML. Isso evita que uma resposta maliciosa ou com defeito execute código
   na página.

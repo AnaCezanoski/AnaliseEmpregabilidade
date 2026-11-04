@@ -55,7 +55,7 @@ def _chamar(sistema: str, mensagem: str, temperatura: float) -> str:
 
             # Guarda o cliente numa variável: se for usado inline, ele é
             # fechado pelo coletor de lixo antes de a requisição sair.
-            cliente = genai.Client(api_key=chave.strip(), http_options={"timeout": 60000})
+            cliente = genai.Client(api_key=chave.strip(), http_options={"timeout": 30000})
             resposta = cliente.models.generate_content(
                 model=modelo(),
                 contents=mensagem,

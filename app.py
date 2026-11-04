@@ -245,10 +245,16 @@ if enviar:
 
     perfil_anonimo = perfil.texto_anonimo()
     avisos = []
-    with st.spinner("Analisando seu perfil... ✨"):
+    # A tradução só é necessária quando há texto livre (experiências, cursos...).
+    # Se a pessoa só marcou opções, o vocabulário fixo das habilidades já basta
+    # e economizamos uma chamada inteira à LLM.
+    tem_texto_livre = bool(perfil.experiencias or perfil.outras_habilidades
+                           or perfil.cursos or perfil.interesses)
+    with st.status("Analisando seu perfil... ✨", expanded=True) as status:
         # 1. Texto em inglês para o classificador (o dataset é em inglês).
         texto_ingles, via_llm = perfil.texto_ingles_offline(), False
-        if llm.disponivel():
+        if llm.disponivel() and tem_texto_livre:
+            st.write("📝 Entendendo o que você contou...")
             try:
                 traducao = llm.traduzir_para_classificador(perfil_anonimo)
                 texto_ingles = f"{traducao} {perfil.termos_glossario()}".strip()
@@ -257,18 +263,21 @@ if enviar:
                 avisos.append(f"Não consegui usar a IA para preparar o texto ({erro}).")
 
         # 2. Classificação com o modelo de ML.
+        st.write("🧠 Comparando com milhares de currículos...")
         areas = classificador.prever(texto_ingles, top_k=3, partes=perfil.partes_classificador())
         termos = classificador.termos_relevantes(texto_ingles, areas[0]["codigo"])
 
         # 3. Orientação gerada pela LLM (ou por regras, no modo offline).
         orientacao, modo = None, "llm"
         if llm.disponivel():
+            st.write(f"✍️ Escrevendo seu plano e seu currículo para {areas[0]['nome']}...")
             try:
                 orientacao = llm.gerar_orientacao(perfil_anonimo, areas, termos)
             except llm.ErroLLM as erro:
                 avisos.append(f"A IA não respondeu ({erro}).")
         if orientacao is None:
             orientacao, modo = orientacao_offline.gerar(perfil, areas, termos), "offline"
+        status.update(label="Análise pronta! 🎉", state="complete", expanded=False)
 
     st.session_state["resultado"] = {
         "perfil": perfil, "areas": areas, "termos": termos, "orientacao": orientacao,
