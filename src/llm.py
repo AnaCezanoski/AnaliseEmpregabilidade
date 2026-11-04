@@ -16,7 +16,7 @@ import re
 from src import prompts
 
 MODELOS_PADRAO = {
-    "gemini": "gemini-2.5-flash",
+    "gemini": "gemini-3.5-flash-lite",
     "openai": "gpt-4o-mini",
     "anthropic": "claude-haiku-5-5",
 }
@@ -53,7 +53,10 @@ def _chamar(sistema: str, mensagem: str, temperatura: float) -> str:
             from google import genai
             from google.genai import types
 
-            resposta = genai.Client(api_key=chave).models.generate_content(
+            # Guarda o cliente numa variável: se for usado inline, ele é
+            # fechado pelo coletor de lixo antes de a requisição sair.
+            cliente = genai.Client(api_key=chave.strip(), http_options={"timeout": 60000})
+            resposta = cliente.models.generate_content(
                 model=modelo(),
                 contents=mensagem,
                 config=types.GenerateContentConfig(

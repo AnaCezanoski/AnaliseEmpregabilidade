@@ -19,30 +19,39 @@ ESCOLARIDADE = {
     "Ensino superior completo": "bachelor degree",
 }
 
+# Os termos em inglês usam o vocabulário que aparece nos currículos reais de cada
+# área do dataset. Palavras ambíguas foram evitadas: "development", por exemplo,
+# fazia "Programação" cair em Desenvolvimento de Negócios. Cada habilidade foi
+# testada sozinha no modelo: a área esperada fica em 1º ou 2º lugar.
+# Habilidades comportamentais (equipe, liderança) existem em qualquer área, então
+# não mandam termos para o classificador; elas só vão para a LLM e o currículo.
 HABILIDADES = {
-    "Atendimento ao público": "customer service client support",
-    "Vendas": "sales selling retail customers",
-    "Informática básica (Word, internet)": "computer skills microsoft office",
-    "Planilhas (Excel)": "microsoft excel spreadsheets data entry",
-    "Programação ou sites": "programming software development web",
-    "Redes sociais e criação de conteúdo": "social media digital content marketing",
-    "Design, edição de fotos ou vídeos": "graphic design photoshop video editing",
-    "Cozinhar e preparar alimentos": "cooking food preparation kitchen",
-    "Organização e rotinas de escritório": "administrative office organization scheduling",
-    "Contas, caixa e controle de dinheiro": "cashier accounting bookkeeping finance",
-    "Ensinar ou explicar coisas": "teaching tutoring education students",
-    "Cuidar de pessoas (crianças, idosos)": "caregiving patient care healthcare",
-    "Esportes e atividade física": "fitness sports training exercise",
-    "Mecânica e consertos": "mechanic repair automotive maintenance",
-    "Construção e reformas": "construction building renovation maintenance",
-    "Arte, desenho ou música": "art drawing music creative",
-    "Falar em público e comunicação": "communication public speaking presentation",
-    "Agricultura ou jardinagem": "agriculture farming gardening",
-    "Costura e moda": "sewing fashion apparel clothing",
-    "Recrutar e organizar pessoas": "recruiting human resources coordination",
-    "Trabalho em equipe": "teamwork collaboration",
-    "Liderança": "leadership team leader",
+    "Atendimento ao público": "bpo customer service process outsourcing voice process customer support representative",
+    "Vendas": "sales retail sales associate selling customers store merchandise sales goals",
+    "Informática básica (Word, internet)": "computer skills microsoft office word windows internet information technology computer support",
+    "Planilhas (Excel)": "excel spreadsheets accounting reconciliation general ledger financial reports",
+    "Programação ou sites": "information technology programming software programmer websites web applications coding",
+    "Redes sociais e criação de conteúdo": "social media digital content marketing instagram posts online content",
+    "Design, edição de fotos ou vídeos": "graphic design designer photoshop illustrator photo editing video editing visual",
+    "Cozinhar e preparar alimentos": "cooking chef food preparation kitchen culinary meals",
+    "Organização e rotinas de escritório": "administrative office clerical filing scheduling human resources records",
+    "Contas, caixa e controle de dinheiro": "bank teller cash handling banking deposits transactions branch",
+    "Ensinar ou explicar coisas": "teaching teacher tutoring students classroom lessons education",
+    "Cuidar de pessoas (crianças, idosos)": "caregiving patient care healthcare elderly care childcare nursing",
+    "Esportes e atividade física": "fitness sports personal training exercise coaching",
+    "Mecânica e consertos": "automotive mechanic automobile vehicles car repair auto service technician dealership",
+    "Construção e reformas": "construction building renovation carpentry masonry job site",
+    "Arte, desenho ou música": "arts artist painting drawing music performance theater creative arts gallery",
+    "Falar em público e comunicação": "public relations communications public speaking media relations press",
+    "Agricultura ou jardinagem": "agriculture agricultural farming farm crops soil livestock harvest",
+    "Costura e moda": "apparel clothing fashion design garments merchandising textiles sewing",
+    "Recrutar e organizar pessoas": "human resources hr recruiting recruitment hiring onboarding employee relations",
+    "Trabalho em equipe": "",
+    "Liderança": "",
 }
+
+# Peso da habilidade favorita na média das previsões (as outras valem 1).
+PESO_FAVORITA = 3
 
 TIPOS_EXPERIENCIA = {
     "Emprego com carteira": "employment",
@@ -72,6 +81,7 @@ class Perfil:
     experiencias: list[Experiencia] = field(default_factory=list)
     interesses: str = ""
     idiomas: list[str] = field(default_factory=list)
+    favorita: str = ""
     # Dados pessoais: nunca saem da sessão local.
     nome: str = ""
     email: str = ""
@@ -95,6 +105,8 @@ class Perfil:
             if self.outras_habilidades:
                 hab = f"{hab}; {anonimizar(self.outras_habilidades, nomes)}".strip("; ")
             linhas.append(f"Habilidades: {hab}")
+        if self.favorita:
+            linhas.append(f"Habilidade de que mais gosta: {self.favorita}")
         for i, exp in enumerate(self.experiencias, 1):
             dur = f" ({exp.duracao})" if exp.duracao else ""
             linhas.append(f"Experiência {i} – {exp.tipo}{dur}: {anonimizar(exp.descricao, nomes)}")
@@ -107,7 +119,7 @@ class Perfil:
     def texto_ingles_offline(self) -> str:
         """Texto em inglês montado só com o glossário, usado quando não há LLM."""
         partes = [ESCOLARIDADE.get(self.escolaridade, "")]
-        partes += [HABILIDADES[h] for h in self.habilidades if h in HABILIDADES]
+        partes.append(self.termos_glossario())
         partes += [TIPOS_EXPERIENCIA.get(e.tipo, "") for e in self.experiencias]
         if any("Inglês" in i for i in self.idiomas):
             partes.append("english")
@@ -116,6 +128,21 @@ class Perfil:
         partes += [self.outras_habilidades, self.cursos, self.interesses]
         partes += [e.descricao for e in self.experiencias]
         return " ".join(p for p in partes if p)
+
+    def termos_glossario(self) -> str:
+        """Termos fixos das habilidades marcadas.
+
+        Também entram no modo com LLM, junto da tradução, para que o resultado
+        não dependa das palavras que a LLM escolheu.
+        """
+        return " ".join(HABILIDADES[h] for h in self.habilidades if HABILIDADES.get(h))
+
+    def partes_classificador(self) -> list[tuple[str, float]]:
+        """Cada habilidade marcada como um trecho separado, com seu peso."""
+        return [
+            (HABILIDADES[h], PESO_FAVORITA if h == self.favorita else 1.0)
+            for h in self.habilidades if HABILIDADES.get(h)
+        ]
 
     def vazio(self) -> bool:
         return not (self.habilidades or self.outras_habilidades or self.experiencias

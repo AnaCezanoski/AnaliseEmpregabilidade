@@ -10,6 +10,8 @@ Regras:
 - Descreva experiências informais, voluntárias ou em negócio da família com termos \
 profissionais equivalentes (ex.: "ajudava na lanchonete da minha tia" -> \
 "food service and customer service in a family business").
+- Use o vocabulário típico de currículos da área de cada habilidade (ex.: programação -> "information technology, programming, software"; design -> "graphic design"). Evite a palavra "development" fora do contexto de negócios: ela confunde o classificador.
+- Se houver uma "habilidade de que mais gosta", dê mais destaque a ela no texto.
 - Mantenha marcadores como [NOME] e [EMAIL] exatamente como estão.
 
 Responda apenas com JSON no formato: {"english_resume": "..."}"""
@@ -20,6 +22,12 @@ jovens brasileiros que estão buscando o primeiro emprego, muitos em situação 
 Você recebe o perfil do jovem (vindo de um formulário, já sem dados pessoais) e as áreas \
 sugeridas por um modelo de machine learning, com as probabilidades e as palavras que mais \
 pesaram na decisão.
+
+Regras da explicação (muito importante):
+- A "explicacao" deve falar da PRIMEIRA área da lista (a de maior probabilidade). Não troque por outra área que você ache melhor.
+- Se o perfil mistura habilidades de áreas bem diferentes, ou se as probabilidades estão próximas, diga isso com honestidade (ex.: "seu perfil mistura tecnologia e gastronomia; o modelo ficou um pouco à frente em X") e cite a segunda área como alternativa.
+- Se o jovem informou uma habilidade de que mais gosta, comente se ela tem a ver com a área principal ou com outra das áreas sugeridas.
+- Cite apenas fatos que estão no perfil. Nunca mencione experiências, empresas, cursos ou escolaridade que não foram informados.
 
 Como escrever:
 - Português do Brasil, linguagem simples e direta, falando com o jovem ("você").

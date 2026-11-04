@@ -4,7 +4,7 @@ Ideia: pegar cada currículo do conjunto de teste, criar uma cópia que muda só
 um atributo sensível e ver se a previsão do modelo muda. Um modelo justo
 deveria dar a mesma área para as duas versões.
 
-Dois testes:
+Quatro testes:
   1. Gênero: troca he<->she, his<->her, man<->woman etc.
      Compara um modelo SEM neutralização de gênero com um modelo COM
      neutralização (a mitigação usada no app).
@@ -12,6 +12,12 @@ Dois testes:
      comunidade de baixa renda ou sobre escola particular em bairro nobre.
      Mede se esse tipo de informação, que aparece indiretamente nos
      currículos, mexe na sugestão de área.
+  3. Modelo do app: repete os testes 1 e 2 com o modelo salvo em
+     models/modelo.joblib (o que o app usa de verdade), no mesmo conjunto
+     de teste, que ele não viu no treino.
+  4. App de ponta a ponta: perfis do formulário com e sem uma frase sobre
+     origem social no campo de interesses, passando pelo mesmo caminho do app
+     (glossário + média por habilidade + correção do viés de base).
 
 Uso:  python bias_test.py [--dados data/Resume.csv]
 Saída: reports/vies.json
@@ -29,6 +35,8 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+from src.classificador import Classificador
+from src.perfil import HABILIDADES, Perfil
 from src.preprocessamento import limpar_texto
 from train import SEED, carregar_dados
 
@@ -68,6 +76,43 @@ def treinar(textos, rotulos, neutralizar: bool) -> Pipeline:
     ])
     modelo.fit([limpar_texto(t, neutralizar) for t in textos], rotulos)
     return modelo
+
+
+FRASES_ORIGEM_PT = {
+    "baixa_renda": "Estudei em escola pública na periferia e moro em comunidade de baixa renda.",
+    "alta_renda": "Estudei em escola particular e moro em bairro nobre.",
+}
+
+
+def perfis_de_teste() -> list[Perfil]:
+    """Perfis do formulário: cada habilidade sozinha e todos os pares de habilidades."""
+    habs = [h for h, termos in HABILIDADES.items() if termos]
+    combinacoes = [[h] for h in habs] + [[a, b] for i, a in enumerate(habs) for b in habs[i + 1:]]
+    return [Perfil(escolaridade="Ensino médio completo", habilidades=c) for c in combinacoes]
+
+
+def testar_app(clf: Classificador, frases: dict[str, str]) -> dict:
+    """Compara a área sugerida pelo app para o mesmo perfil com origem social diferente.
+
+    Roda com a frase em português (modo offline: o modelo, treinado em inglês,
+    quase não reconhece essas palavras) e em inglês (o que chega ao modelo
+    quando a LLM traduz o perfil), que é o cenário mais exigente.
+    """
+    mudou, variacoes = 0, []
+    perfis = perfis_de_teste()
+    for p in perfis:
+        res = {}
+        for chave, frase in frases.items():
+            p.interesses = frase
+            res[chave] = clf.prever(p.texto_ingles_offline(), 1, partes=p.partes_classificador())[0]
+        mudou += res["baixa_renda"]["codigo"] != res["alta_renda"]["codigo"]
+        variacoes.append(abs(res["baixa_renda"]["probabilidade"] - res["alta_renda"]["probabilidade"]))
+    return {
+        "n_perfis": len(perfis),
+        "taxa_mudanca_previsao": round(mudou / len(perfis), 4),
+        "variacao_media_probabilidade": round(float(np.mean(variacoes)), 4),
+        "variacao_maxima_probabilidade": round(float(np.max(variacoes)), 4),
+    }
 
 
 def comparar(modelo, neutralizar, textos_a, textos_b) -> dict:
@@ -117,6 +162,22 @@ def main():
             alta = [t + FRASES_ORIGEM["alta_renda"] for t in X_te]
             resultado["origem_social"] = comparar(modelo, neutralizar, baixa, alta)
 
+    # Testes 3 e 4: o modelo e o caminho que o app usa de verdade.
+    clf = Classificador()
+    modelo_app = {"modelo": clf.nome}
+    if com_genero:
+        modelo_app["genero"] = comparar(clf.pipeline, clf.neutralizar_genero, com_genero, trocados)
+    modelo_app["origem_social"] = comparar(
+        clf.pipeline, clf.neutralizar_genero,
+        [t + FRASES_ORIGEM["baixa_renda"] for t in X_te],
+        [t + FRASES_ORIGEM["alta_renda"] for t in X_te],
+    )
+    resultado["modelo_do_app"] = modelo_app
+    resultado["app_ponta_a_ponta"] = {
+        "frase_em_portugues": testar_app(clf, FRASES_ORIGEM_PT),
+        "frase_em_ingles": testar_app(clf, {k: v.strip() for k, v in FRASES_ORIGEM.items()}),
+    }
+
     (RAIZ / "reports").mkdir(exist_ok=True)
     (RAIZ / "reports" / "vies.json").write_text(
         json.dumps(resultado, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -131,6 +192,18 @@ def main():
     print("\nTESTE 2 – ORIGEM SOCIAL (frase de baixa renda vs. alta renda)")
     print(f"  mudança de previsão={o['taxa_mudanca_previsao']:.1%}  "
           f"variação média de prob.={o['variacao_media_probabilidade']:.3f}")
+    m = resultado["modelo_do_app"]
+    print(f"\nTESTE 3 – MODELO DO APP ({m['modelo']})")
+    if "genero" in m:
+        print(f"  gênero: mudança de previsão={m['genero']['taxa_mudanca_previsao']:.1%}  "
+              f"variação média de prob.={m['genero']['variacao_media_probabilidade']:.3f}")
+    print(f"  origem social: mudança de previsão={m['origem_social']['taxa_mudanca_previsao']:.1%}  "
+          f"variação média de prob.={m['origem_social']['variacao_media_probabilidade']:.3f}")
+    print("\nTESTE 4 – APP DE PONTA A PONTA (perfis do formulário, origem social)")
+    for idioma, a in resultado["app_ponta_a_ponta"].items():
+        print(f"  {idioma:20s} perfis={a['n_perfis']}  mudança de previsão={a['taxa_mudanca_previsao']:.1%}  "
+              f"variação média de prob.={a['variacao_media_probabilidade']:.3f}  "
+              f"máxima={a['variacao_maxima_probabilidade']:.3f}")
     print("\nResultado salvo em reports/vies.json")
 
 

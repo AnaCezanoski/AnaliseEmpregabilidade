@@ -1,0 +1,53 @@
+{
+  "genero": {
+    "sem_neutralizacao": {
+      "f1_macro_teste": 0.641,
+      "n_curriculos": 168,
+      "taxa_mudanca_previsao": 0.0238,
+      "variacao_media_probabilidade": 0.0035,
+      "variacao_maxima_probabilidade": 0.0334
+    },
+    "com_neutralizacao": {
+      "f1_macro_teste": 0.6436,
+      "n_curriculos": 168,
+      "taxa_mudanca_previsao": 0.0,
+      "variacao_media_probabilidade": 0.0,
+      "variacao_maxima_probabilidade": 0.0
+    }
+  },
+  "origem_social": {
+    "n_curriculos": 497,
+    "taxa_mudanca_previsao": 0.0241,
+    "variacao_media_probabilidade": 0.0104,
+    "variacao_maxima_probabilidade": 0.0537
+  },
+  "modelo_do_app": {
+    "modelo": "random_forest",
+    "genero": {
+      "n_curriculos": 168,
+      "taxa_mudanca_previsao": 0.0,
+      "variacao_media_probabilidade": 0.0,
+      "variacao_maxima_probabilidade": 0.0
+    },
+    "origem_social": {
+      "n_curriculos": 497,
+      "taxa_mudanca_previsao": 0.0161,
+      "variacao_media_probabilidade": 0.0086,
+      "variacao_maxima_probabilidade": 0.06
+    }
+  },
+  "app_ponta_a_ponta": {
+    "frase_em_portugues": {
+      "n_perfis": 210,
+      "taxa_mudanca_previsao": 0.0,
+      "variacao_media_probabilidade": 0.0005,
+      "variacao_maxima_probabilidade": 0.0044
+    },
+    "frase_em_ingles": {
+      "n_perfis": 210,
+      "taxa_mudanca_previsao": 0.0048,
+      "variacao_media_probabilidade": 0.0302,
+      "variacao_maxima_probabilidade": 0.1086
+    }
+  }
+}
